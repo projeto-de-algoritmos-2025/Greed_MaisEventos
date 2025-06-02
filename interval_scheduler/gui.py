@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from scheduler import interval_scheduling
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class IntervalSchedulingApp:
     def __init__(self, master):
@@ -86,7 +86,7 @@ class IntervalSchedulingApp:
         self.canvas.delete("all")
         width = 880
         offset_x = 20
-        offset_y = 30
+        offset_y = 50 
 
         if not self.events:
             return
@@ -95,7 +95,22 @@ class IntervalSchedulingApp:
         max_time = max(end for _, end in self.events)
         total_minutes = int((max_time - min_time).total_seconds() / 60)
 
-        # Empilhamento de linhas sem sobreposição
+        timeline_y = offset_y - 30
+        self.canvas.create_line(offset_x, timeline_y, offset_x + width, timeline_y, fill="black")
+
+        start_hour = min_time.replace(minute=0, second=0, microsecond=0)
+        end_hour = max_time.replace(minute=0, second=0, microsecond=0)
+        hours = int((end_hour - start_hour).total_seconds() / 3600) + 2 
+
+        for i in range(hours):
+            time_point = start_hour + timedelta(hours=i)
+            if time_point > max_time:
+                break
+            minute_offset = int((time_point - min_time).total_seconds() / 60)
+            x = offset_x + (minute_offset / total_minutes) * width
+            self.canvas.create_line(x, timeline_y - 5, x, timeline_y + 5, fill="black")
+            self.canvas.create_text(x, timeline_y - 10, text=time_point.strftime("%H:%M"), font=("Arial", 8), anchor="s")
+
         lines = []
         for event in self.events:
             placed = False
@@ -120,6 +135,14 @@ class IntervalSchedulingApp:
                 self.canvas.create_rectangle(x1, y, x2, y + 25, fill=color, outline="black")
                 self.canvas.create_text((x1 + x2) / 2, y + 12, font=("Arial", 9),
                     text=f"{start.strftime('%d/%m %H:%M')} - {end.strftime('%H:%M')}")
+
+        # Legenda
+        legend_y = self.canvas.winfo_height() - 40
+        self.canvas.create_rectangle(20, legend_y, 40, legend_y + 20, fill="#90caf9", outline="black")
+        self.canvas.create_text(60, legend_y + 10, anchor="w", text="Evento não selecionado")
+
+        self.canvas.create_rectangle(220, legend_y, 240, legend_y + 20, fill="lightgreen", outline="black")
+        self.canvas.create_text(260, legend_y + 10, anchor="w", text="Evento selecionado")
 
     def solve(self):
         selected = interval_scheduling(self.events)
