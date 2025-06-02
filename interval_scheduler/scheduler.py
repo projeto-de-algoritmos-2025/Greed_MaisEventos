@@ -1,5 +1,4 @@
 def interval_scheduling(events):
-    # Ordena pelo fim (datetime)
     sorted_events = sorted(events, key=lambda x: x[1])
     selected = []
     last_end = None
